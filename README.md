@@ -2,6 +2,34 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Description
+
+A PID controller implemented in C++ for the 4th assignment of the second term of Udacity's Self-Driving Car Engineer Nanodegree
+
+## Reflection
+
+P, I, and D coefficients were selected manually.
+The aim was to have the car run inside the allowed area of the simulator, as well as making the ride as smooth as possible.
+Trial and error was used to find what would be "good values", as well as the effect of P, I, and D.
+For the last part, the values of each coefficient were modified, and the effect was observed.
+Furthermore, simulations were run with each of the coefficients set to zero at a time.
+
+Twiddle, or other "automated" methods for parameter tuning were not implemented.
+
+
+P – Proportional Term
+controls the steering angle of the car in proportion to the cross track error (CTE). 
+When it's used alone, it makes the car always overshoot. Higher values lead to sharper turns. 
+Value selected: Kp: 0.1
+
+D – Differential Term
+Temporal derivative of the CTE. Used together with P, helps reduce overshooting. Higher values lead to smoother turns. 
+Value selected: Kd: 4.0
+I – Integral Term
+Counters CTE caused by systematic bias. Higher values lead to sharper turns. 
+In the simulations run, when the value was not very small, the car was moving on a heavily oscillating track, and would often exit the road.
+It's value could even be set to zero, and the car would still perform  satisfactory in the case of the specific simulations.
+Value selected: Kp: 0.000001
 
 ## Dependencies
 
