@@ -32,10 +32,21 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-  // TODO: Initialize the pid variable.
+  PID pid_steering;
+  // Initialize the pid variable. A proportional–integral–derivative controller (PID controller)
+  double Kp_pid_steering = 0.1;  // proportional coefficient
+  double Ki_pid_steering = 0.000001;  // integral coefficient
+  double Kd_pid_steering = 4.0;  // differential coefficient
+  pid_steering.Init(Kp_pid_steering, Ki_pid_steering, Kd_pid_steering);
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  // Throttle pid
+  PID pid_throttle;
+  double Kp_pid_throttle = 0.7;  // proportional coefficient
+  double Ki_pid_throttle = 0.001;  // integral coefficient
+  double Kd_pid_throttle = 4.0;  // differential coefficient
+  pid_throttle.Init(Kp_pid_throttle, Ki_pid_throttle, Kd_pid_throttle);
+
+  h.onMessage([&pid_steering, &pid_throttle](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {// [&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -51,13 +62,54 @@ int main()
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value;
+          double throttle;
           /*
           * TODO: Calcuate steering value here, remember the steering value is
           * [-1, 1].
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
+
+          // Set a variable throttle, depending on the absolute value of the total error
+          double abs_cte = std::fabs(pid_throttle.TotalError());
+          if (abs_cte <= 0.01) {
+            throttle = 0.5;
+          } else if (abs_cte <= 0.4) {
+            throttle = 0.4;
+          } else {
+            throttle = 0.3;
+          }
+
+
+            pid_steering.Kp = 0.1;
+            //pid_steering.Ki = 0.005; 
+            //even a small value like 0.005 for Ki was producing oscillations
+            pid_steering.Ki = 0.000001;
+            pid_steering.Kd = 4.0;
+
+          // Update steering PID error
+          pid_steering.UpdateError(cte);
           
+          
+          steer_value = pid_steering.TotalError();
+          if (steer_value > 1.0)
+            steer_value = 1.0;
+          if (steer_value < -1.0)
+            steer_value = -1.0;          
+          
+          // update throttle
+          pid_throttle.UpdateError(cte);
+          // Set a variable throttle, depending on the absolute value of the total error
+          abs_cte = std::fabs(pid_throttle.TotalError());
+          
+          if (abs_cte <= 0.01) {
+            throttle = 0.5;
+          } else if (abs_cte <= 0.4) {
+            throttle = 0.4;
+          } else {
+            throttle = 0.3;
+          }
+     
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
